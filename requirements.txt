@@ -1,9 +1,8 @@
 fastapi
-uvicorn
+uvicorn[standard]
 sqlalchemy
-pydantic
+pydantic[email]
 psycopg2-binary
 python-multipart
 passlib[bcrypt]
 PyJWT
-email-validator
