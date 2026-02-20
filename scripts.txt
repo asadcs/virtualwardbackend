@@ -1,0 +1,92 @@
+# ================================
+# AUTO-DETECT + VERIFY SCRIPT
+# ================================
+$ports = 8000..8100
+$API = $null
+
+Write-Host "`n🔎 Searching FastAPI on 127.0.0.1 (8000-8100)..." -ForegroundColor Cyan
+foreach ($p in $ports) {
+  try {
+    Invoke-RestMethod -Uri "http://127.0.0.1:$p/" -Method Get -TimeoutSec 1 | Out-Null
+    $API = "http://127.0.0.1:$p"
+    break
+  } catch {}
+}
+
+if (-not $API) {
+  Write-Host "❌ API not reachable on ports 8000-8100" -ForegroundColor Red
+  return
+}
+
+Write-Host "✅ Using API: $API" -ForegroundColor Green
+
+# ================================
+# CONFIG: CHANGE THESE
+# ================================
+$email = "test01@gmail.com"
+$password = "12345678"
+
+# ================================
+# LOGIN
+# ================================
+Write-Host "`n🔐 Logging in..." -ForegroundColor Cyan
+$loginBody = @{ email = $email; password = $password } | ConvertTo-Json
+
+try {
+  $login = Invoke-RestMethod -Method Post -Uri "$API/users/login" -ContentType "application/json" -Body $loginBody
+} catch {
+  Write-Host "❌ LOGIN FAILED" -ForegroundColor Red
+  Write-Host $_.Exception.Message
+  return
+}
+
+$access = $login.access_token
+if (-not $access) {
+  Write-Host "❌ No access_token returned" -ForegroundColor Red
+  $login | ConvertTo-Json -Depth 10
+  return
+}
+
+$h = @{ Authorization = "Bearer $access" }
+Write-Host "✅ Login OK" -ForegroundColor Green
+
+# ================================
+# /users/me
+# ================================
+Write-Host "`n👤 GET /users/me" -ForegroundColor Cyan
+try {
+  $me = Invoke-RestMethod -Method Get -Uri "$API/users/me" -Headers $h
+  $me | ConvertTo-Json -Depth 10
+} catch {
+  Write-Host "❌ /users/me FAILED" -ForegroundColor Red
+  Write-Host $_.Exception.Message
+  return
+}
+
+# ================================
+# /assignments/me
+# ================================
+Write-Host "`n📋 GET /assignments/me" -ForegroundColor Cyan
+try {
+  $as = Invoke-RestMethod -Method Get -Uri "$API/assignments/me" -Headers $h
+  $as | ConvertTo-Json -Depth 10
+} catch {
+  Write-Host "❌ /assignments/me FAILED" -ForegroundColor Red
+  Write-Host $_.Exception.Message
+  return
+}
+
+# ================================
+# /patient/dashboard
+# ================================
+Write-Host "`n🏥 GET /patient/dashboard" -ForegroundColor Cyan
+try {
+  $dash = Invoke-RestMethod -Method Get -Uri "$API/patient/dashboard" -Headers $h
+  $dash | ConvertTo-Json -Depth 10
+} catch {
+  Write-Host "❌ /patient/dashboard FAILED" -ForegroundColor Red
+  Write-Host $_.Exception.Message
+  return
+}
+
+Write-Host "`n🎯 DONE" -ForegroundColor Green
