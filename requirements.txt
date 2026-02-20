@@ -6,3 +6,4 @@ psycopg2-binary
 python-multipart
 passlib[bcrypt]
 PyJWT
+email-validator
