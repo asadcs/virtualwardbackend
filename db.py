@@ -1,15 +1,21 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# ---------- POSTGRES CONFIGURATION ----------
-USER = "asad"
-PASSWORD = "asad"
-HOST = "localhost"
-PORT = "5432"
-DB_NAME = "virtualward"
+# Railway/Neon will provide this (you set it in Variables)
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-DATABASE_URL = f"postgresql+psycopg2://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB_NAME}"
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is not set")
 
-engine = create_engine(DATABASE_URL)
+# Optional: if you ever use old 'postgres://' urls, normalize them
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,   # helps with dropped connections
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
