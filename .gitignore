@@ -1,5 +1,11 @@
+# virtual environments
+.venv/
 venv/
+
+# python
 __pycache__/
 *.pyc
+
+# env files
 .env
 .env.*
