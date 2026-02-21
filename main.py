@@ -1,4 +1,3 @@
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,7 +15,6 @@ from assignments import QuestionnaireAssignment
 from patient_dashboard import QuestionnaireInstance, QuestionnaireAnswer
 from admin_monitoring import AdminNotification
 
-# ✅ Flow models
 from flows import QuestionnaireFlow, FlowNode, FlowNodeOption
 
 # ============================================================
@@ -54,8 +52,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ✅ Create all database tables
-Base.metadata.create_all(bind=engine)
+# ✅ Create all database tables (SAFE place)
+@app.on_event("startup")
+def startup():
+    Base.metadata.create_all(bind=engine)
 
 # ============================================================
 # INCLUDE ROUTERS
@@ -64,13 +64,12 @@ app.include_router(user.router, prefix="/users", tags=["Users"])
 app.include_router(role.router, prefix="/roles", tags=["Roles"])
 app.include_router(patients_router, prefix="/patients", tags=["Patients"])
 
-app.include_router(assignments_router)         # /assignments
-app.include_router(patient_dashboard_router)   # /patient
-app.include_router(demo_admin_router)          # /demo-admin
-app.include_router(admin_monitoring_router)    # /admin
+app.include_router(assignments_router)
+app.include_router(patient_dashboard_router)
+app.include_router(demo_admin_router)
+app.include_router(admin_monitoring_router)
 
-# ✅ Flow management
-app.include_router(flows_router)               # /flows
+app.include_router(flows_router)
 
 # ============================================================
 # ROOT ENDPOINTS
@@ -88,8 +87,3 @@ def root():
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "service": "virtual-ward-api", "version": "2.0.0"}
-
-
-
-# venv\Scripts\activate
-# uvicorn main:app --reload
